@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pro To-Do List</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tsparticles/confetti@3.0.3/tsparticles.confetti.bundle.min.js"></script>
+
+    <style>
+        /* Keyframes for animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.9); }
+        }
+
+        /* General Styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --background: #EEF3FB;
+            --card-bg: #ffffff;
+            --text-primary: #1a202c;
+            --text-secondary: #718096;
+            --accent-primary: #6c5ce7; /* A vibrant purple */
+            --accent-secondary: #00b894; /* A fresh green for completion */
+            --accent-danger: #e53e3e;
+            --shadow: 0 7px 25px rgba(0, 0, 0, 0.08);
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding-top: 50px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+
+        /* Stats Header Section */
+        .stats-container {
+            padding: 25px 30px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, #a29bfe 100%);
+            color: white;
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .details h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+        }
+
+        .details p {
+            opacity: 0.9;
+            font-weight: 400;
+            margin-top: 4px;
+            height: 24px;
+        }
+
+        #progressbar {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        #progress {
+            width: 0%;
+            height: 100%;
+            background-color: var(--accent-secondary);
+            border-radius: 4px;
+            transition: width 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        #number {
+            width: 90px;
+            height: 90px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 22px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        /* Form Section */
+        form {
+            margin-top: 30px;
+            width: 100%;
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 0 20px;
+            height: 55px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            box-shadow: var(--shadow);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+        }
+
+        form button {
+            width: 55px;
+            height: 55px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--accent-primary);
+            color: white;
+            outline: none;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        form button:hover {
+            background-color: #5b4dce;
+            transform: translateY(-2px);
+        }
+
+        /* Task List Section */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 30px;
+            list-style: none;
+        }
+
+        .taskItem {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            background-color: var(--card-bg);
+            padding: 15px 20px;
+            border-radius: 15px;
+            justify-content: space-between;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            animation: fadeIn 0.5s ease forwards;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .taskItem.deleting {
+            animation: fadeOut 0.4s ease forwards;
+        }
+
+        .taskItem:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .task {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+            overflow: hidden;
+            word-break: break-word;
+        }
+
+        .task input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: var(--accent-primary);
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        .task p {
+            margin: 0;
+        }
+
+        .task.completed p {
+            text-decoration: line-through;
+            color: var(--text-secondary);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .task-actions svg {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            transition: transform 0.2s ease, fill 0.2s ease;
+            fill: var(--text-secondary);
+        }
+
+        .task-actions svg.edit-icon:hover {
+            transform: scale(1.2);
+            fill: var(--accent-primary);
+        }
+
+        .task-actions svg.delete-icon:hover {
+            transform: scale(1.2);
+            fill: var(--accent-danger);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="stats-container">
+            <div class="details">
+                <h1>My Tasks</h1>
+                <p id="motivationalMessage">Let's get started!</p>
+                <div id="progressbar">
+                    <div id="progress"></div>
+                </div>
+            </div>
+            <div id="number">0/0</div>
+        </div>
+
+        <form id="taskForm">
+            <input type="text" id="taskInput" placeholder="Add a new task..." />
+            <button id="addTaskBtn" type="submit" title="Add Task">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            </button>
+        </form>
+
+        <ul class="task-list" id="task-list"></ul>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const taskInput = document.getElementById('taskInput');
+            const taskForm = document.getElementById('taskForm');
+            const taskList = document.getElementById('task-list');
+            const addTaskBtn = document.getElementById('addTaskBtn');
+            const motivationalMessage = document.getElementById('motivationalMessage');
+
+            // Icons for buttons
+            const addIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+            const updateIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+            let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+            let editIndex = -1;
+
+            // ---- EVENT LISTENERS ----
+            taskForm.addEventListener("submit", (e) => {
+                e.preventDefault();
+                const text = taskInput.value.trim();
+
+                if (text) {
+                    if (editIndex > -1) {
+                        tasks[editIndex].text = text;
+                        editIndex = -1;
+                    } else {
+                        tasks.push({ text: text, completed: false });
+                    }
+                    taskInput.value = "";
+                    updateButtonTo("add"); // Revert button to "+"
+                    saveAndRender();
+                }
+            });
+
+            // ---- CORE FUNCTIONS ----
+            const saveAndRender = () => {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                updateTaskList();
+                updateStats();
+            };
+
+            const toggleTaskComplete = (index) => {
+                tasks[index].completed = !tasks[index].completed;
+                saveAndRender();
+            };
+
+            const deleteTask = (index) => {
+                const itemToDelete = taskList.children[index];
+                if (itemToDelete) {
+                    // Add fade-out animation class
+                    itemToDelete.classList.add('deleting');
+                    // Wait for animation to finish before removing from data and re-rendering
+                    setTimeout(() => {
+                        tasks.splice(index, 1);
+                        saveAndRender();
+                    }, 400); // Must match animation duration
+                }
+            };
+
+            const editTask = (index) => {
+                taskInput.value = tasks[index].text;
+                editIndex = index;
+                taskInput.focus();
+                updateButtonTo("update"); // Change button to "✓"
+            };
+            
+            // Allow clicking elements inside the SVG
+            window.toggleTaskComplete = toggleTaskComplete;
+            window.deleteTask = deleteTask;
+            window.editTask = editTask;
+
+            // ---- UI UPDATE FUNCTIONS ----
+            const updateButtonTo = (mode) => {
+                if (mode === "update") {
+                    addTaskBtn.innerHTML = updateIconSVG;
+                    addTaskBtn.title = "Update Task";
+                } else {
+                    addTaskBtn.innerHTML = addIconSVG;
+                    addTaskBtn.title = "Add Task";
+                }
+            };
+            
+            const updateStats = () => {
+                const completedTasks = tasks.filter(task => task.completed).length;
+                const totalTasks = tasks.length;
+                const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+                
+                document.getElementById('progress').style.width = `${progress}%`;
+                document.getElementById('number').innerText = `${completedTasks}/${totalTasks}`;
+
+                if (totalTasks === 0) {
+                    motivationalMessage.innerText = "Let's add a task!";
+                } else if (progress === 0) {
+                    motivationalMessage.innerText = "Time to get started!";
+                } else if (progress < 50) {
+                    motivationalMessage.innerText = "Keep up the great work!";
+                } else if (progress < 100) {
+                    motivationalMessage.innerText = "You're almost there!";
+                } else {
+                    motivationalMessage.innerText = "All done! Amazing job! 🎉";
+                }
+                
+                if (totalTasks > 0 && completedTasks === totalTasks) {
+                    blastConfetti();
+                }
+            };
+
+            const updateTaskList = () => {
+                taskList.innerHTML = "";
+                tasks.forEach((taskItem, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'taskItem';
+
+                    const editIcon = `<svg class="edit-icon" onclick="editTask(${index})" viewBox="0 0 24 24"><path d="M17.293 2.293a1 1 0 0 1 1.414 0l2 2a1 1 0 0 1 0 1.414l-13 13a1 1 0 0 1-.707.293H4a1 1 0 0 1-1-1v-2.586a1 1 0 0 1 .293-.707l13-13zm-2.586 2.586L4 15.586V18h2.414l10.707-10.707-2.414-2.414z"/></svg>`;
+                    const deleteIcon = `<svg class="delete-icon" onclick="deleteTask(${index})" viewBox="0 0 24 24"><path d="M9 3v1H4v2h1v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6h1V4h-5V3H9zm0 2h6v13H9V5zm2 2v9h2V7h-2z"/></svg>`;
+
+                    listItem.innerHTML = `
+                        <div class="task ${taskItem.completed ? 'completed' : ''}">
+                            <input type="checkbox" ${taskItem.completed ? 'checked' : ''} onchange="toggleTaskComplete(${index})" />
+                            <p>${taskItem.text}</p>
+                        </div>
+                        <div class="task-actions">
+                            ${editIcon}
+                            ${deleteIcon}
+                        </div>`;
+                    taskList.appendChild(listItem);
+                });
+            };
+
+            const blastConfetti = () => {
+                const defaults = {
+                    spread: 360,
+                    ticks: 70,
+                    gravity: 0,
+                    decay: 0.94,
+                    startVelocity: 30,
+                    shapes: ["star"],
+                    colors: ['#6c5ce7', '#a29bfe', '#00b894', '#ffeaa7']
+                };
+
+                confetti({ ...defaults, particleCount: 50, scalar: 1.2 });
+                confetti({ ...defaults, particleCount: 25, scalar: 0.75 });
+            };
+
+            saveAndRender();
+        });
+    </script>
+</body>
+</html>
